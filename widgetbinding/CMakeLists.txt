@@ -1,4 +1,5 @@
-# 修改同 samplebinding, 无注释
+# 一些和 samplebinding 一样的部分没注释了, 不一样的部分依旧是 NOTE: 标出, 主要是
+# 改了一些地方让 macOS 能编过
 
 # Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
@@ -148,8 +149,34 @@ endforeach()
 get_target_property(QtCore_is_framework Qt6::Core FRAMEWORK)
 if (QtCore_is_framework)
     get_target_property(qt_core_library_location Qt6::Core LOCATION)
+
+    # NOTE: 可以观察一下这个找到的路径, 在我的环境里, 它找到的是下面的路径
+    # 
+    #      /Users/darcy/Qt/6.9.2/macos/lib/QtCore.framework/Versions/A/QtCore
+    # 
+    #      实际上在下面的路径下有同样的文件 (只不过是 symlink)
+    # 
+    #      /Users/darcy/Qt/6.9.2/macos/lib/QtCore.framework
+    # 
+    #      所以说 Qt 官方的 demo 写了一个 ../ 就完事了, 结果在我的环境没跑通, 这整块
+    #      的逻辑, 就是检查是不是 macOS, 然后把 /Users/darcy/Qt/6.9.2/macos/lib 这个
+    #      路径传递给 shiboken6 继续处理, 这整块写的有点啰嗦含蓄了, 上面先是写了个判
+    #      断Qt6::Core 是不是FRAMEWORK, 本质上检查哪个都行, 检查 Qt6::Widgets 也行,
+    #      因为 FRAMEWORK 只有macOS 上有, 这块后续我们自己重构一下会更清晰明了
+    message(qt_core_library_location " -> " ${qt_core_library_location})
+
     get_filename_component(qt_core_library_location_dir "${qt_core_library_location}" DIRECTORY)
-    get_filename_component(lib_dir "${qt_core_library_location_dir}/../" ABSOLUTE)
+    # NOTE: 这里原来写着是 ../ , 我这里改成 ../../../ 了, 如果我不改的话, 路径找
+    #       不对, 这个路径底层会传到 -F<path> 的, 确保形似下列的路径被找到
+    # 
+    #       /Users/darcy/Qt/6.9.2/macos/lib
+    # 
+    #       注意 lib 路径下有很多 XXX.framework 
+    get_filename_component(lib_dir "${qt_core_library_location_dir}/../../../" ABSOLUTE)
+
+    # NOTE: 这个 --framework-include-paths 是 shiboken 的参数, 看了下源码, 到最
+    #       后是变成 -F<path> 给编译器的, 如果这个路径设置不对, 相当于 -F<path>
+    #       没设置上的话, 会报错说 'QtCore/qglobal.h' file not found
     list(APPEND INCLUDES "--framework-include-paths=${lib_dir}")
 endif()
 
@@ -205,7 +232,11 @@ add_custom_command(OUTPUT ${generated_sources}
 set(${bindings_library}_sources ${generated_sources})
 
 # Define and build the bindings library.
-add_library(${bindings_library} SHARED ${${bindings_library}_sources})
+
+# NOTE: 这里本来是写着 SHARED 的, 改成 MODULE 了, 不然后缀在 macOS 上不对, 写成
+#       MODULE 以后后缀是 .so 可以被 python 直接导入, 写 SHARED 的话是 .dylib,
+#       python找不到
+add_library(${bindings_library} MODULE ${${bindings_library}_sources})
 
 
 # Apply relevant include and link flags.
