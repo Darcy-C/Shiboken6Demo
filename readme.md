@@ -149,6 +149,27 @@ Windows PowerShell 用
 
 很难调, **基本上这个工具只包 PySide6 的成功生成**, 本仓库学习日志提供了在不修改 Qt 工具链源码 的情况下跑通, 有些组织的项目是给这个工具链打 patch 以后才能用.
 
+### 版本没对齐导致无法实际运行的问题
+
+最上面有说过, `PySide6` == `shiboken6` == `shiboken6-generator` 这 3 个组件版本只要一样, 原则上能编过, 也能实际运行, C++ Qt (下面都简写为 Qt)多少版本不是太重要, 你只要确保你没有用很新的 API 就可以了. **但是**, 有但是, 就是如果你装的 Qt 的版本是 >=6.9 的话, “恭喜你”, 里面有个 API 的符号不一样了, 在 widgetbinding 这个官方案例中, 里面用了 QBasicTimer::start, 具体来说是下面这个
+
+> void QBasicTimer::start(QBasicTimer::Duration duration, Qt::TimerType timerType, QObject *obj)
+
+这东西, 在 Qt 6.9 改了函数签名!!! duration参数支持传入 nanoseconds 了, 所以, 相当于是说, 如果你电脑上的 Qt 装的是 6.9, 那么你的所有工具链的版本最低都是 6.9 起步
+
+- Qt -> 6.9
+- PySide6 -> 6.9
+- shiboken6 -> 6.9
+- shiboken6-generator -> 6.9
+
+就是这么不幸, 相当于以后要用你模块的项目, 都是要用 6.9, 否则, 你编译能过, 但是运行时没有这个 Qt 6.9 的函数, 找不到的话就会有形似下方的报错
+
+> ImportError: dlopen(widgetbinding/wiggly.so, 0x0002): Symbol not found: __ZN11QBasicTimer5startENSt3__16chrono8durationIxNS0_5ratioILl1ELl1000000000EEEEEN2Qt9TimerTypeEP7QObject
+
+你仔细看一下这个说是没找到的名字, 这个函数的函数签名, 一看就是 C++ mangle 过的名字, 我们可以网上找个 [C++ Demangler](https://demangler.com) 看一下到底是哪个符号找不到就清楚了.
+
+那么, 如果你装的是 Qt 6.8 的话, 恭喜你, 你什么都不用改, 你这样编出的模块, 理论上支持最低 Qt 6.5, 因为 Qt 文档里写了, 这个参数的变化是向后兼容的, 并且对于这个方法来说(QBasicTimer::start) 是 Qt 6.5 起支持
+
 ---
 
 下面的一些问题不仅限于本仓库案例, 但是这里也写一些, 帮助后来人检查问题
