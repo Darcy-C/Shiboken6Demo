@@ -153,9 +153,9 @@ Windows PowerShell 用
 
 最上面有说过, `PySide6` == `shiboken6` == `shiboken6-generator` 这 3 个组件版本只要一样, 原则上能编过, 也能实际运行, C++ Qt (下面都简写为 Qt)多少版本不是太重要, 你只要确保你没有用很新的 API 就可以了. **但是**, 有但是, 就是如果你装的 Qt 的版本是 >=6.9 的话, “恭喜你”, 里面有个 API 的符号不一样了, 在 widgetbinding 这个官方案例中, 里面用了 QBasicTimer::start, 具体来说是下面这个
 
-> void QBasicTimer::start(QBasicTimer::Duration duration, Qt::TimerType timerType, QObject *obj)
+> void QBasicTimer::start(QBasicTimer::Duration duration, Qt::TimerType timerType, QObject \*obj)
 
-这东西, 在 Qt 6.9 改了函数签名!!! duration参数支持传入 nanoseconds 了, 所以, 相当于是说, 如果你电脑上的 Qt 装的是 6.9, 那么你的所有工具链的版本最低都是 6.9 起步, 即
+这东西, 在 Qt 6.9 改了函数签名!!! duration 参数支持传入 nanoseconds 了, 所以, 相当于是说, 如果你电脑上的 Qt 装的是 6.9, 那么你的所有工具链的版本最低都是 6.9 起步, 即
 
 - Qt ---- 6.9
 - PySide6 ---- 6.9
@@ -164,15 +164,21 @@ Windows PowerShell 用
 
 并且, 如果这个 API 但凡在以后的版本又改了 (还没稳定下来的 API 是这样的), 那么你这个编译出来的 Python C 扩展 就会恨短命, 就只能兼容没几个版本的 PySide6 版本, 当然我们自己用自己编其实问题不大, 打成 wheel 给别人用才会有这个问题 (这个是另外一个事情了 后续再写)
 
-就是这么不幸, 相当于以后要用你模块的项目, 都是要用 6.9, 否则, 你编译能过, 但是运行时没有这个 Qt 6.9 的函数, 找不到的话就会有形似下方的报错
+就是这么不幸, 相当于以后要用你模块的项目, 都是要用 6.9, 否则, 你编译能过, 但是运行时没有这个 Qt 6.9 的函数, 找不到的话如果我们在 Python 里 import 我们的 C Py 扩展 的时候就会有形似下方的报错
 
-> ImportError: dlopen(widgetbinding/wiggly.so, 0x0002): Symbol not found: __ZN11QBasicTimer5startENSt3__16chrono8durationIxNS0_5ratioILl1ELl1000000000EEEEEN2Qt9TimerTypeEP7QObject
+> ImportError: dlopen(widgetbinding/wiggly.so, 0x0002): Symbol not found: **ZN11QBasicTimer5startENSt3**16chrono8durationIxNS0_5ratioILl1ELl1000000000EEEEEN2Qt9TimerTypeEP7QObject
+
+注意到, Python 这块找不到我们 Py C 扩展 需要的符号, 导入不了了.
 
 你仔细看一下这个说是没找到的名字, 这个函数的函数签名, 一看就是 C++ mangle 过的名字, 我们可以网上找个 [C++ Demangler](https://demangler.com) 看一下到底是哪个符号找不到就清楚了.
 
 那么, 如果你装的是 Qt 6.8 的话, 恭喜你, 你什么都不用改, 你这样编出的模块, 理论上支持最低 Qt 6.5, 因为 Qt 文档里写了, 这个参数的变化是向后兼容的, 并且对于这个方法来说(QBasicTimer::start) 是 Qt 6.5 起支持
 
 其实通过这样解释, 你就其实应该已经可以看出来, 对于这种类型的项目 (shiboken6), 为什么有的人可以一次编过, 有的人就要 debug 很久, 有一些运气成分在这里的, 你看, 只要那个人在 Qt 6.8 为稳定版本的期间捣鼓这玩意, 就相对顺利不是么, 我相信你能懂我意思, 我们现在知道了这些潜在的坑以后, 以后未来 Qt 的更新我们也能自己研究为什么了, 浅浅 debug 一下都能解决.
+
+### 导入顺序不同导致无法导入
+
+这个问题跟上面这个问题类似, 就是能正常编过, 但是就是 import 不了我们的 Py C 扩展, 我们就假设版本都完全一样了, 还是 import 不了, 这个问题可能存在的原因我在 `/widgetbinding/gen_pyi.py` 浅述了, 见带有 \*\*\* 的注释
 
 ---
 
