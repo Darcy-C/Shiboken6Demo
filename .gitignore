@@ -1,0 +1,8 @@
+__pycache__/
+build/
+
+*.dll
+*.pyd
+*.pyi
+
+.vscode/
