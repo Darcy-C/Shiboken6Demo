@@ -1,8 +1,18 @@
+# python 缓存以及构建文件夹
 __pycache__/
 build/
 
+# 各自平台的动态链接库
 *.dll
+*.dylib
+
+# python C 扩展的后缀, 在 Windows 下是 pyd, 在 macOS 下是 .so, 它们本质都是动态
+# 链接库 (和 dll 和 dylib 是一样的格式), 但是在 python 是不同的叫法
 *.pyd
+*.so
+
+# python 的类型文件, 仓库构建以后的输出, 忽略
 *.pyi
 
+# 仓库的构建目前不依赖 .vscode 的配置, 暂时忽略
 .vscode/
