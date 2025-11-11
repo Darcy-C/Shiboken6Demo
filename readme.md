@@ -54,17 +54,23 @@
 
    装好以后配到 PATH, 最好和 Python 里装的版本是一样的, 差几个版本没有关系, 原则上都只要是 Qt 6 就可以了
 
-   - macOS
+   #### macOS
 
-     如果你是用 brew 装的 qt, 那么你不用额外配置, CMake 自己就会找到 Qt, 因为已经在 PATH 下了
+   如果你是用 brew 装的 qt, 那么你不用额外配置, CMake 自己就会找到 Qt, 因为已经在 PATH 下了
 
-     如果你是用其他方法装的 Qt, 例如直接用工具下的 下到自己指定的位置的, 如果 CMake 找不到 Qt, 你可以在 CMake 在 configure 的命令里自己指定一下要用的 Qt 的路径
+   如果你是用其他方法装的 Qt, 例如直接用工具下的 下到自己指定的位置的, 如果 CMake 找不到 Qt, 你可以在 CMake 在 configure 的命令里自己指定一下要用的 Qt 的路径
 
-     可以用 Qt6_DIR 去指定一下, 你可以看到我只是多加了一个 -DQt6_DIR=\<path\>
+   可以用 Qt6_DIR 去指定一下, 你可以看到我只是多加了一个 -DQt6_DIR=\<path\>
 
-     你可以看到我这里有一个自己下载下来的 Qt 路径, 放在了 /Users/darcy 下, 我没有把这个路径加到 PATH 里
+   你可以看到我这里有一个自己下载下来的 Qt 路径, 放在了 /Users/darcy 下, 我没有把这个路径加到 PATH 里
 
-     > cmake .. -B. -G Ninja -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/Users/darcy/Qt/6.9.2/macos/lib/cmake/Qt6
+   > cmake .. -B. -G Ninja -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/Users/darcy/Qt/6.9.2/macos/lib/cmake/Qt6
+
+   #### Windows
+
+   同上一样的道理, 你可以在 PATH 里加形似下面的路径:
+
+   > C:\Qt\6.8.3\msvc2022_64\bin
 
 4. Visual Studio / Xcode
 
@@ -92,6 +98,20 @@
 
    - Apple clang (目前苹果平台默认使用的编译器, 装完 Xcode 以后默认就在 /usr/bin)
    - macOS SDK
+
+5. (Windows 用户看) libclang
+
+   Windows 用户可能装完上面的 VS 组件以后还没有 clang, 这个时候可以自己去下载, shiboken 文档里给了 libclang 的下载地址, 下载和自己编译器版本相近的版本, 例如下载下面的版本 (解压后是一个文件夹)
+
+   > libclang-release_140-based-windows-vs2019_64
+
+   如果 CMake 报找不到 clang 的话, 你可能需要设置下面的变量, 这个文档里有说
+
+   CMD 命令:
+
+   > set CLANG_INSTALL_DIR=C:\Users\Administrator\Downloads\libclang-release_140-based-windows-vs2019_64\libclang\bin
+
+   你看得出来我把 libclang 下载到 下载 文件夹了
 
 ## 常见坑记录
 
