@@ -20,13 +20,19 @@
 
 ## 仓库学习方式
 
-仓库里有 2 个文件夹, 是直接从 Qt examples 里下载下来的 (shiboken 的文档里直接可以下), 基本没有删减, 删减和修改处有写注释, 方便知道这里可能有个坑, 避免这些坑以后都可以跑起来
+仓库里有 2 个文件夹(2 个案例, samplebinding 和 widgetbinding), 是直接从 Qt examples 里下载下来的 (shiboken 的文档里直接可以下), 基本没有删减, 删减和修改处有写注释, 方便知道这里可能有个坑, 避免这些坑以后都可以跑起来
 
-看的顺序是 samplebinding, 然后是 widgetbinding, 分别是不带 Qt 的绑定 和 带 Qt 的绑定
+看的顺序是 samplebinding, 然后是 widgetbinding, 分别是不带 Qt 的绑定 和 带 Qt 的绑定, 由于重复部分没有写注释说明, 建议先跑过 samplebinding 这个案例 然后再看 widgetbinding
+
+(注) samplebinding 这个案例相当于是 shiboken 的 Hello World 案例, 没有什么实际用途 (不含 Qt 框架, 那还不如用其他的替代品例如 pybind11), 但是先看会方便后续另外一个案例的上手, 即 widgetbinding.
 
 官方 shiboken 文档里写的流程是可以跟着走的, 请看着文档来尝试编译, 就像上面说的这里不会赘述编译流程
 
 2 个案例里官方自带的注释都没有修改, 案例里的代码也没有修改, 大家可以放心使用
+
+### 关于 widgetbinding 案例
+
+这个案例官方是提供了同一个组件的 2 个语言的版本的, 就是同一个叫做 wiggly 组件, 分别用 Python 的 PySide6 写 和 用 C++ 写, 我这里额外给大家备注一下, 免得各位看晕了, 所以 `widgetbinding/wigglywidget.py` 这个文件跟本次 shiboken 绑定使用的学习是没任何关系的
 
 ## 前置知识和准备
 
@@ -47,6 +53,18 @@
 3. C++ Qt SDK
 
    装好以后配到 PATH, 最好和 Python 里装的版本是一样的, 差几个版本没有关系, 原则上都只要是 Qt 6 就可以了
+
+   - macOS
+
+     如果你是用 brew 装的 qt, 那么你不用额外配置, CMake 自己就会找到 Qt, 因为已经在 PATH 下了
+
+     如果你是用其他方法装的 Qt, 例如直接用工具下的 下到自己指定的位置的, 如果 CMake 找不到 Qt, 你可以在 CMake 在 configure 的命令里自己指定一下要用的 Qt 的路径
+
+     可以用 Qt6_DIR 去指定一下, 你可以看到我只是多加了一个 -DQt6_DIR=\<path\>
+
+     你可以看到我这里有一个自己下载下来的 Qt 路径, 放在了 /Users/darcy 下, 我没有把这个路径加到 PATH 里
+
+     > cmake .. -B. -G Ninja -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/Users/darcy/Qt/6.9.2/macos/lib/cmake/Qt6
 
 4. Visual Studio / Xcode
 
@@ -79,7 +97,7 @@
 
 ### shiboken6-generator 和 shiboken6 的版本不同导致的问题
 
-不同版本可能会导致生成的时候用了一个较新的 shiboken API, 然后在使用的时候 (shiboken6) 没有找到的问题, 导致可以编译出, 但是实际不能 import 导入
+不同版本可能会导致生成的时候 (shikoben6-generator 期间) 用了一个较新的 shiboken API, 然后在使用的时候 (shiboken6 期间) 没有找到的问题, 导致可以编译出, 但是实际不能 import 导入
 
 可以自行用下面的命令检查一下版本
 
@@ -91,7 +109,7 @@ Windows PowerShell 用
 
 > pip list | Select-String shibo
 
-然后 shiboken6-generator 这个库现在已经可以在 pypi 直接下了, 可以不指定 Qt 的仓库, 如果你要下指定版本的话, 记得 shiboken6-generator 和 shiboken6 一起重新装, 不要只装一个, 如果你要生成的绑定如果和 Qt 有关, 也就是我们最终的目标, 在 PySide6 里能用的组件, 那么你 shiboken6 的版本和 PySide6 的版本也要一样
+然后 shiboken6-generator 这个库现在已经可以在 pypi 直接下了, 可以不指定 Qt 的仓库, 如果你要下指定版本的话, 记得 shiboken6-generator 和 shiboken6 一起重新装, 不要只装一个, 如果你要生成的绑定如果用到了 Qt 框架, 也就是我们最终的目标 (即在 PySide6 里能用的组件), 那么你 shiboken6 的版本和 PySide6 的版本也要一样
 
 注明: C++ Qt 的版本可以不一样, 只要你没用到新版本的 API
 
@@ -139,7 +157,7 @@ Windows PowerShell 用
 
 ### 没有修改官网案例里 CMakeLists.txt 的一些配置导致的问题
 
-如果你直接从网页上点 download 下载下来的案例, 有一个叫做 `pyside_config.py` 的辅助文件是不会下载下来的, 这里单独从仓库下载放到本仓库了, 具体见 CMakeLists.txt 文件内注释解释
+如果你直接从网页上点 download 下载下来的案例, 有一个叫做 `pyside_config.py` 的辅助文件是不会下载下来的, 这里单独从仓库下载放到本仓库了, 具体见 CMakeLists.txt 文件内注释解释 (2 个案例, samplebinding 和 widgetbinding 里各自的 CMakeLists.txt 都有注释, 重复一样的部分没有写注释, 所以要先看和测试 samplebinding 这个简单的)
 
 ### 纯坑 - 无法使用 shiboken6-genpyi 的问题
 
@@ -164,7 +182,7 @@ Windows PowerShell 用
 - shiboken6 ---- 6.9
 - shiboken6-generator ---- 6.9
 
-并且, 如果这个 API 但凡在以后的版本又改了 (还没稳定下来的 API 是这样的), 那么你这个编译出来的 Python C 扩展 就会恨短命, 就只能兼容没几个版本的 PySide6 版本, 当然我们自己用自己编其实问题不大, 打成 wheel 给别人用才会有这个问题 (这个是另外一个事情了 后续再写)
+并且, 如果这个 API 但凡在以后的版本又改了 (还没稳定下来的 API 是这样的), 那么你这个编译出来的 Python C 扩展 就会很“短命”, 就只能兼容没几个版本的 PySide6 版本, 当然我们自己用自己编其实问题不大, 打成 wheel 给别人用才会有这个问题 (这个是另外一个事情了 后续再写)
 
 就是这么不幸, 相当于以后要用你模块的项目, 都是要用 6.9, 否则, 你编译能过, 但是运行时没有这个 Qt 6.9 的函数, 找不到的话如果我们在 Python 里 import 我们的 C Py 扩展 的时候就会有形似下方的报错
 
@@ -218,5 +236,7 @@ python gen_pyi.py
 ```
 
 ## 其他后续问题
+
+后续各位要打包成可执行文件的话, 就像我在 `samplebinding/gen_pyi.py` 最后说的那样, 很多打包器例如 pyinstaller, 是会自动帮你修复 \*NIX 平台的 rpath 问题的, 所以你开发环境只要能跑起来(python main.py) 那么你直接默认参数打包就直接能用, 我这里 macOS 系统 (pyinstaller main.py) 打包以后 在 PD 虚拟机开干净的 macOS 系统测试, 是直接可以使用的, 直接在用户终端验证过了 (有一个干净环境方便验证比较方便, 没有干净的 macOS VM 的话用 otool 和直接目测一下打包出来产物的文件夹结构, 这样也可以手工进行检查)
 
 这个仓库还有一些问题没有写出, 例如关于后续打成 wheel 让其他用户使用的问题, 例如 \*NIX 系统需要处理 rpath 等问题, 后面有机会再写
