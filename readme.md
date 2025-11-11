@@ -2,6 +2,8 @@
 
 注: shiboken6 是 Qt 提供的一个 C++ 到 Python 的通用绑定工具 (和 pybind11 是同类), Qt 用它来创建他们自己的 PySide6 绑定
 
+<img src="./readme_imgs/lulu.jpg" width="200"></img>
+
 本仓库写的比较详细, 方便之后有需要的人查看学习
 
 ## 目标

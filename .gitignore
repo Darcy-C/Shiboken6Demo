@@ -1,6 +1,8 @@
-# python 缓存以及构建文件夹
+# python 缓存以及构建文件夹等常见构建文件(夹)
 __pycache__/
 build/
+dist/
+main.spec
 
 # 各自平台的动态链接库
 *.dll
