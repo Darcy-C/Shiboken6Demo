@@ -12,7 +12,7 @@
 
 - 在 Python 里使用 Qt C++ 我们自己写的 QWidget 组件
 - 体验需和正常的 Python 类一样, 有补全, 能过类型检查
-- 能和 PySide6 结合在一起, 例如我们写的一个 Widget 类, 实例化以后能直接被 addWidget 到布局里
+- 能和 PySide6 结合在一起, 例如我们自己 C++ 写的一个 QWidget 子类, 实例化以后在 PySide6 能直接被 addWidget 到布局里
 
 ## 缘起
 
@@ -32,7 +32,7 @@
 
 ### 关于 widgetbinding 案例
 
-这个案例官方是提供了同一个组件的 2 个语言的版本的, 就是同一个叫做 wiggly 组件, 分别用 Python 的 PySide6 写 和 用 C++ 写, 我这里额外给大家备注一下, 免得各位看晕了, 所以 `widgetbinding/wigglywidget.py` 这个文件跟本次 shiboken 绑定使用的学习是没任何关系的
+这个案例官方是提供了同一个组件的 2 个语言的版本的, 就是同一个叫做 wiggly 的组件, 分别用 Python 的 PySide6 写 和 用 C++ 写的, 我这里额外给大家备注一下, 免得各位看晕了, 所以 `widgetbinding/wigglywidget.py` 这个文件跟本次 shiboken 绑定使用的学习是没任何关系的
 
 ## 前置知识和准备
 
@@ -58,17 +58,17 @@
 
    如果你是用 brew 装的 qt, 那么你不用额外配置, CMake 自己就会找到 Qt, 因为已经在 PATH 下了
 
-   如果你是用其他方法装的 Qt, 例如直接用工具下的 下到自己指定的位置的, 如果 CMake 找不到 Qt, 你可以在 CMake 在 configure 的命令里自己指定一下要用的 Qt 的路径
+   如果你是用其他方法装的 Qt, 例如直接用工具下的 下到自己指定的位置的, 如果 CMake 找不到 Qt, 你可以在 CMake 在执行 configure 的命令的时候 自己指定一下要用的 Qt 的路径
 
-   可以用 Qt6_DIR 去指定一下, 你可以看到我只是多加了一个 -DQt6_DIR=\<path\>
+   你可以用 Qt6_DIR 去指定一下, 见下方, 你可以看到我只是多加了一个 -DQt6_DIR=\<path\>
 
-   你可以看到我这里有一个自己下载下来的 Qt 路径, 放在了 /Users/darcy 下, 我没有把这个路径加到 PATH 里
+   你可以从这个命令看到, 我这里有一个自己下载下来的 Qt, 放在了 /Users/darcy 路径下, 我没有把这个路径加到 PATH 里
 
    > cmake .. -B. -G Ninja -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/Users/darcy/Qt/6.9.2/macos/lib/cmake/Qt6
 
    #### Windows
 
-   同上一样的道理, 你可以在 PATH 里加形似下面的路径:
+   同上, 一样的道理, 你可以在 PATH 里加形似下面的路径让 CMake 可以找到 Qt:
 
    > C:\Qt\6.8.3\msvc2022_64\bin
 
@@ -99,7 +99,7 @@
    - Apple clang (目前苹果平台默认使用的编译器, 装完 Xcode 以后默认就在 /usr/bin)
    - macOS SDK
 
-5. (Windows 用户看) libclang
+5. (Windows 用户看这条) libclang
 
    Windows 用户可能装完上面的 VS 组件以后还没有 clang, 这个时候可以自己去下载, shiboken 文档里给了 libclang 的下载地址, 下载和自己编译器版本相近的版本, 例如下载下面的版本 (解压后是一个文件夹)
 
@@ -119,7 +119,7 @@
 
 不同版本可能会导致生成的时候 (shikoben6-generator 期间) 用了一个较新的 shiboken API, 然后在使用的时候 (shiboken6 期间) 没有找到的问题, 导致可以编译出, 但是实际不能 import 导入
 
-可以自行用下面的命令检查一下版本
+可以自行用下面的命令检查一下版本, 确保 2 个库的版本是一样的, 避免自己反复安装调试的时候忽略了这一点
 
 macOS 类 bash 用
 
@@ -129,7 +129,11 @@ Windows PowerShell 用
 
 > pip list | Select-String shibo
 
-然后 shiboken6-generator 这个库现在已经可以在 pypi 直接下了, 可以不指定 Qt 的仓库, 如果你要下指定版本的话, 记得 shiboken6-generator 和 shiboken6 一起重新装, 不要只装一个, 如果你要生成的绑定如果用到了 Qt 框架, 也就是我们最终的目标 (即在 PySide6 里能用的组件), 那么你 shiboken6 的版本和 PySide6 的版本也要一样
+额外注明一下, shiboken6-generator 这个库现在已经可以在 pypi 直接下了, 换句话说, 你可以直接用下面的方法装特定版本的 shiboken6-generator
+
+> pip install shiboken6-generator==6.6.3
+
+可以不指定 Qt 的 pip 仓库, 因为 pypi 下已经有了, 再次提醒, 记得 shiboken6-generator 和 shiboken6 一起重新装, 不要只装一个, 如果你要生成的绑定如果用到了 Qt 框架, 也就是我们最终的目标 (即在 PySide6 里能用的组件), 那么你 shiboken6 的版本和 PySide6 的版本也要一样
 
 注明: C++ Qt 的版本可以不一样, 只要你没用到新版本的 API
 
@@ -137,7 +141,7 @@ Windows PowerShell 用
 
 ### 看错官网文档的版本教程导致的问题
 
-近阶段 Qt 6.10 已经出来了, shiboken 的文档也默认是 6.10 的版本, 6.10 的案例里的代码里用的 API 和之前的版本是不一样的, 如果你没有意识到这一点, 可能你本机还在可能 ... 6.6 6.7 6.8 6.9 然后你找来找去也不知道那个 CMake 宏到底定义在哪里, 它定义在 Qt 6.10 的 shiboken 工具链里
+近阶段 Qt 6.10 已经出来了, shiboken 的文档也默认是 6.10 的版本, 6.10 的案例里的代码里用的 API 和之前的版本是不一样的, 如果你没有意识到这一点, 可能你本机还在可能 ... 6.6 6.7 6.8 6.9 然后你找来找去也不知道那个 CMake 宏到底定义在哪里, 它定义在 Qt 6.10 的 shiboken 工具链里, 再次重申, 6.10 版本的文档里用了 6.10 的新 API (一个 CMake 宏), 我们这里暂时不用 6.10
 
 由于我目前的项目还没有用新的 Qt 6.10, 我认为还需要一段时间才会到 6.10, 所以本文没有用 6.10 的新方法, 大家在看的时候, 在 Shiboken 的文档网页左侧, 改成看 6.9 及以下的版本, 例如 6.8
 
@@ -260,3 +264,5 @@ python gen_pyi.py
 后续各位要打包成可执行文件的话, 就像我在 `samplebinding/gen_pyi.py` 最后说的那样, 很多打包器例如 pyinstaller, 是会自动帮你修复 \*NIX 平台的 rpath 问题的, 所以你开发环境只要能跑起来(python main.py) 那么你直接默认参数打包就直接能用, 我这里 macOS 系统 (pyinstaller main.py) 打包以后 在 PD 虚拟机开干净的 macOS 系统测试, 是直接可以使用的, 直接在用户终端验证过了 (有一个干净环境方便验证比较方便, 没有干净的 macOS VM 的话用 otool 和直接目测一下打包出来产物的文件夹结构, 这样也可以手工进行检查)
 
 这个仓库还有一些问题没有写出, 例如关于后续打成 wheel 让其他用户使用的问题, 例如 \*NIX 系统需要处理 rpath 等问题, 后面有机会再写
+
+END.
